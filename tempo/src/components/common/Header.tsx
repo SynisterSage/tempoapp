@@ -16,6 +16,8 @@ interface HeaderProps {
   onNotificationPress?: () => void;
   onSettingsPress?: () => void;
   notificationBadge?: number;
+  onBackPress?: () => void;
+  showBackButton?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -23,6 +25,8 @@ export const Header: React.FC<HeaderProps> = ({
   onNotificationPress,
   onSettingsPress,
   notificationBadge,
+  onBackPress,
+  showBackButton = false,
 }) => {
   const theme = useTheme();
 
@@ -30,6 +34,16 @@ export const Header: React.FC<HeaderProps> = ({
     <View style={[styles.headerWrapper, { backgroundColor: theme.colors.background }]}>
       <SafeAreaView edges={['top']} style={{ backgroundColor: theme.colors.background }}>
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+          {showBackButton ? (
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={onBackPress}
+              activeOpacity={0.7}
+            >
+              <Icon name="chevron-left" size={28} color={Colors.navy} />
+            </TouchableOpacity>
+          ) : null}
+          
           <RNText
             style={[styles.title, { color: Colors.purple }]}
             numberOfLines={1}
@@ -37,32 +51,34 @@ export const Header: React.FC<HeaderProps> = ({
             {title}
           </RNText>
 
-          <View style={styles.iconContainer}>
-            {/* Notification Bell */}
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={onNotificationPress}
-              activeOpacity={0.7}
-            >
-              <Icon name="bell-outline" size={24} color={Colors.navy} />
-              {notificationBadge && notificationBadge > 0 && (
-                <View style={[styles.badge, { backgroundColor: Colors.error }]}>
-                  <RNText style={styles.badgeText}>
-                    {notificationBadge > 9 ? '9+' : notificationBadge}
-                  </RNText>
-                </View>
-              )}
-            </TouchableOpacity>
+          {!showBackButton && (
+            <View style={styles.iconContainer}>
+              {/* Notification Bell */}
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={onNotificationPress}
+                activeOpacity={0.7}
+              >
+                <Icon name="bell-outline" size={24} color={Colors.navy} />
+                {notificationBadge && notificationBadge > 0 && (
+                  <View style={[styles.badge, { backgroundColor: Colors.error }]}>
+                    <RNText style={styles.badgeText}>
+                      {notificationBadge > 9 ? '9+' : notificationBadge}
+                    </RNText>
+                  </View>
+                )}
+              </TouchableOpacity>
 
-            {/* Settings Gear */}
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={onSettingsPress}
-              activeOpacity={0.7}
-            >
-              <Icon name="cog-outline" size={24} color={Colors.navy} />
-            </TouchableOpacity>
-          </View>
+              {/* Settings Gear */}
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={onSettingsPress}
+                activeOpacity={0.7}
+              >
+                <Icon name="cog-outline" size={24} color={Colors.navy} />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </SafeAreaView>
     </View>
@@ -82,13 +98,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 12,
+    gap: 8,
   },
   title: {
     fontFamily: 'Tovar-Kolobov',
     fontSize: 24,
     fontWeight: '600',
+    flex: 1,
   },
   iconContainer: {
     flexDirection: 'row',
