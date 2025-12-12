@@ -111,11 +111,97 @@ export interface UserProfile {
 // Auth functions
 export const auth = {
   signUp: async (email: string, password: string) => {
-    return supabase.auth.signUp({ email, password });
+    try {
+      console.log('📝 Signing up user with email:', email);
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+      });
+      
+      if (error) {
+        console.error('❌ Sign up error:', error.message);
+        return { data, error };
+      }
+
+      console.log('✅ Sign up successful, user created:', data.user?.id);
+      console.log('📝 Session from signup:', data.session ? 'YES' : 'NO');
+      
+      if (data.user) {
+        // Try to set the session from signup response if available
+        if (data.session) {
+          console.log('📝 Setting session from signup response...');
+          const { error: setSessionError } = await supabase.auth.setSession(data.session);
+          if (setSessionError) {
+            console.error('❌ Error setting session on client:', setSessionError.message);
+          } else {
+            console.log('✅ Session set on Supabase client from signup response');
+          }
+        } else {
+          // If no session in response, try to get it via getSession
+          console.log('📝 No session in signup response, attempting to get session...');
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const { data: { session }, error: getSessionError } = await supabase.auth.getSession();
+          if (getSessionError) {
+            console.error('❌ Error getting session:', getSessionError.message);
+          } else if (session) {
+            console.log('✅ Got session via getSession after signup:', session.user?.id);
+          } else {
+            console.log('⚠️ No session available via getSession');
+          }
+        }
+        
+        // Save session to storage
+        await sessionStorage.setSession({
+          accessToken: data.session?.access_token || '',
+          refreshToken: data.session?.refresh_token || '',
+          expiresAt: Math.floor(Date.now() / 1000) + 3600,
+          userId: data.user.id,
+          email: data.user.email || '',
+        });
+        
+        console.log('💾 Session saved to storage');
+      }
+      
+      return { data, error: null };
+    } catch (err: any) {
+      console.error('❌ Sign up exception:', err);
+      return { data: null, error: err };
+    }
   },
 
   signIn: async (email: string, password: string) => {
-    return supabase.auth.signInWithPassword({ email, password });
+    try {
+      console.log('🔐 Signing in user with email:', email);
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password,
+      });
+      
+      if (error) {
+        console.error('❌ Sign in error:', error.message);
+        return { data, error };
+      }
+
+      if (data.user && data.session) {
+        console.log('✅ Sign in successful for user:', data.user.id);
+        
+        // Save session to storage
+        await sessionStorage.setSession({
+          accessToken: data.session.access_token,
+          refreshToken: data.session.refresh_token,
+          expiresAt: Math.floor(Date.now() / 1000) + 3600,
+          userId: data.user.id,
+          email: data.user.email || '',
+        });
+        
+        console.log('💾 Session saved to storage');
+      }
+      
+      return { data, error: null };
+    } catch (err: any) {
+      console.error('❌ Sign in exception:', err);
+      return { data: null, error: err };
+    }
   },
 
   signInWithGoogle: async () => {
@@ -241,6 +327,17 @@ export const profile = {
     try {
       console.log('📝 Inserting profile for user:', userId);
       console.log('📝 Profile data:', data);
+      
+      // Check current auth session before insert
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('📝 Current session user ID:', session?.user?.id);
+        console.log('📝 Profile user ID to insert:', userId);
+        console.log('📝 IDs match:', session?.user?.id === userId);
+        console.log('📝 Session access token:', !!session?.access_token);
+      } catch (sessionCheckError) {
+        console.error('❌ Error checking session:', sessionCheckError);
+      }
       
       // Wrap in timeout to catch hanging promises
       let timeoutId: ReturnType<typeof setTimeout>;

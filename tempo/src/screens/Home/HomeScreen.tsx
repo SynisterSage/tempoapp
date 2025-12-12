@@ -67,7 +67,10 @@ export const HomeScreen = ({ navigation }: Props) => {
         onNotificationPress={handleNotificationPress}
         notificationBadge={0}
       />
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Featured Course Card */}
         <FeaturedCourseCard course={data.featuredCourse} onPress={handleCoursePress} />
 
@@ -108,6 +111,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+  },
+  scrollContent: {
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xl,
   },
   cardsGrid: {
     flexDirection: 'row',

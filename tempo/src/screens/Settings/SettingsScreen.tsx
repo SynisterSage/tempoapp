@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -13,6 +13,7 @@ import { Header } from '../../components/common/Header';
 import { Colors } from '../../theme/colors';
 import { Spacing, BorderRadius } from '../../theme/spacing';
 import { Shadows } from '../../theme/shadows';
+import { auth } from '../../services/auth';
 
 type Props = MainTabScreenProps<'SettingsTab'>;
 
@@ -28,9 +29,58 @@ export const SettingsScreen = ({ navigation }: Props) => {
   const [distanceUnit, setDistanceUnit] = useState<'Y' | 'M'>('Y');
   const [handedness, setHandedness] = useState<'L' | 'R'>('L');
   const [haptics, setHaptics] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleBackPress = () => {
     navigation.navigate('HomeTab');
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Log Out',
+      'Are you sure you want to log out?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => {},
+          style: 'cancel',
+        },
+        {
+          text: 'Log Out',
+          onPress: async () => {
+            await performLogout();
+          },
+          style: 'destructive',
+        },
+      ],
+    );
+  };
+
+  const performLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      console.log('🚪 Initiating logout...');
+      
+      const { error } = await auth.signOut();
+      
+      if (error) {
+        Alert.alert('Logout Failed', 'Unable to log out. Please try again.');
+        console.error('Logout error:', error);
+        return;
+      }
+      
+      console.log('✅ Logout successful');
+      // Navigate to auth flow
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'AuthStack' as any }],
+      });
+    } catch (err) {
+      Alert.alert('Error', 'An unexpected error occurred during logout.');
+      console.error('Logout exception:', err);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -41,7 +91,10 @@ export const SettingsScreen = ({ navigation }: Props) => {
         showBackButton={true}
       />
       
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Profile Card */}
         <View style={[styles.profileCard, Shadows.md]}>
           <View style={styles.profileImageContainer}>
@@ -226,8 +279,14 @@ export const SettingsScreen = ({ navigation }: Props) => {
 
         {/* Log Out Button */}
         <View style={styles.section}>
-          <TouchableOpacity style={[styles.logoutButton, { backgroundColor: Colors.purple }]}>
-            <Text style={styles.logoutButtonText}>Log Out</Text>
+          <TouchableOpacity 
+            style={[styles.logoutButton, { backgroundColor: Colors.error }]}
+            onPress={handleLogout}
+            disabled={isLoggingOut}
+          >
+            <Text style={styles.logoutButtonText}>
+              {isLoggingOut ? 'Logging Out...' : 'Log Out'}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -243,8 +302,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
   },
-  scrollView: {
-    flex: 1,
+  scrollContent: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xl,
     backgroundColor: Colors.pale,
   },
   profileCard: {

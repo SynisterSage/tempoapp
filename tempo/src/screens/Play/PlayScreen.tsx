@@ -112,7 +112,10 @@ export const PlayScreen = ({ navigation }: Props) => {
       </View>
 
       {/* Course Cards */}
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.coursesList}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={styles.scrollContent}
+      >
         {filteredCourses.length > 0 ? (
           filteredCourses.map((course) => (
             <CourseCard
@@ -173,8 +176,10 @@ const styles = StyleSheet.create({
   filterIcon: {
     fontSize: 20,
   },
-  coursesList: {
-    flex: 1,
+  scrollContent: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xl,
   },
   emptyState: {
     flex: 1,

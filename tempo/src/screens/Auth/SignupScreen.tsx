@@ -34,8 +34,18 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
     setLocalError(null);
 
     // Validation
-    if (!agreeToTerms) {
-      setLocalError('You must agree to the terms and conditions');
+    if (!email.trim()) {
+      setLocalError('Please enter an email');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setLocalError('Please enter a valid email');
+      return;
+    }
+
+    if (password.length < 8) {
+      setLocalError('Password must be at least 8 characters');
       return;
     }
 
@@ -44,8 +54,8 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
-    if (password.length < 8) {
-      setLocalError('Password must be at least 8 characters');
+    if (!agreeToTerms) {
+      setLocalError('You must agree to the terms and conditions');
       return;
     }
 
@@ -57,8 +67,15 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  // Simple email validation
+  const isValidEmail = (emailStr: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(emailStr);
+  };
+
   const isFormValid =
     email.length > 0 &&
+    isValidEmail(email) &&
     password.length >= 8 &&
     confirmPassword === password &&
     agreeToTerms;
@@ -179,10 +196,11 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
           <TouchableOpacity
             style={[
               styles.signupButton,
-              { opacity: isFormValid && !loading ? 1 : 0.5 },
+              { opacity: isFormValid && !loading ? 1 : 0.6 },
+              !isFormValid && !loading && styles.signupButtonDisabled,
             ]}
             onPress={handleSignup}
-            disabled={!isFormValid || loading}
+            disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color={Colors.white} />
@@ -324,6 +342,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginTop: Spacing.md,
+  },
+  signupButtonDisabled: {
+    backgroundColor: Colors.myrtle,
   },
   signupButtonText: {
     color: Colors.white,

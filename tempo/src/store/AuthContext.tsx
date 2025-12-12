@@ -222,18 +222,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string) => {
     try {
       setError(null);
+      console.log('🔐 SignUp context: Starting signup for', email);
+      
       const { data, error: signUpError } = await auth.signUp(email, password);
       if (signUpError) throw signUpError;
 
-      if (data.user) {
+      if (data && data.user) {
+        console.log('✅ SignUp context: User created:', data.user.id);
         const authUser: AuthUser = {
           id: data.user.id,
           email: data.user.email || '',
           user_metadata: data.user.user_metadata,
         };
         setUser(authUser);
+
+        // Profile creation will happen via onAuthStateChange listener
+        // Don't create it here - the listener will catch the auth state change
+        console.log('📝 SignUp context: User created, profile will be created by auth listener');
       }
     } catch (err: any) {
+      console.error('❌ SignUp context error:', err.message);
       setError(err.message);
       throw err;
     }
@@ -245,7 +253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error: signInError } = await auth.signIn(email, password);
       if (signInError) throw signInError;
 
-      if (data.user) {
+      if (data && data.user) {
         const authUser: AuthUser = {
           id: data.user.id,
           email: data.user.email || '',

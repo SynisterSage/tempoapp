@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MainTabScreenProps } from '../../navigation/types';
 import { Header } from '../../components/common/Header';
 import { Colors } from '../../theme/colors';
+import { Spacing } from '../../theme/spacing';
 import {
   mockCoachInsight,
   mockTrainingTools,
@@ -194,8 +195,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 100,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xl,
   },
 
   // Section Headers

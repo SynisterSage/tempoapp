@@ -6,6 +6,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ScoreData } from '../../types/home';
 import { Colors } from '../../theme/colors';
 import { Spacing, BorderRadius } from '../../theme/spacing';
@@ -18,9 +19,9 @@ interface ScoreIndexCardProps {
 
 export const ScoreIndexCard: React.FC<ScoreIndexCardProps> = ({ scoreData, onPress }) => {
   const getTrendIcon = () => {
-    if (scoreData.trend === 'down') return '↓';
-    if (scoreData.trend === 'up') return '↑';
-    return '−';
+    if (scoreData.trend === 'down') return 'trending-down';
+    if (scoreData.trend === 'up') return 'trending-up';
+    return 'minus';
   };
 
   const getTrendColor = () => {
@@ -33,21 +34,28 @@ export const ScoreIndexCard: React.FC<ScoreIndexCardProps> = ({ scoreData, onPre
 
   return (
     <View style={[styles.container, Shadows.md]}>
-      {/* Background accent shape */}
-      <View style={styles.backgroundShape} />
+      {/* Background accent shapes */}
+      <View style={styles.backgroundShape1} />
+      <View style={styles.backgroundShape2} />
 
       {/* Trend indicator */}
       <View style={styles.trendContainer}>
         <View style={[styles.trendBadge, { backgroundColor: getTrendColor() }]}>
-          <Text style={styles.trendIcon}>{getTrendIcon()}</Text>
+          <Icon 
+            name={getTrendIcon()} 
+            size={14} 
+            color={Colors.white} 
+          />
           <Text style={styles.trendText}>{formattedChange}</Text>
         </View>
       </View>
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.label}>Index</Text>
-        <Text style={styles.score}>{scoreData.index}</Text>
+        <Text style={styles.label}>Handicap Index</Text>
+        <View style={styles.scoreContainer}>
+          <Text style={styles.score}>{scoreData.index}</Text>
+        </View>
       </View>
     </View>
   );
@@ -62,18 +70,27 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'space-between',
   },
-  backgroundShape: {
+  backgroundShape1: {
     position: 'absolute',
-    right: -30,
-    bottom: -30,
+    right: -20,
+    top: -20,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  backgroundShape2: {
+    position: 'absolute',
+    left: -40,
+    bottom: -40,
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
   trendContainer: {
     alignItems: 'flex-end',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   trendBadge: {
     flexDirection: 'row',
@@ -82,11 +99,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
     gap: Spacing.xs,
     alignItems: 'center',
-  },
-  trendIcon: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.white,
   },
   trendText: {
     fontSize: 12,
@@ -97,14 +109,20 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   label: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(255, 255, 255, 0.75)',
     marginBottom: Spacing.sm,
+    letterSpacing: 0.3,
+  },
+  scoreContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
   },
   score: {
-    fontSize: 36,
-    fontWeight: '700',
+    fontSize: 44,
+    fontWeight: '800',
     color: Colors.white,
+    letterSpacing: -1,
   },
 });

@@ -135,7 +135,7 @@ export const StatsScreen = ({ navigation }: Props) => {
       )}
 
       <ScrollView
-        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
       >
@@ -159,8 +159,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xl,
   },
   loadingContainer: {
     flex: 1,

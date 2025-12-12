@@ -4,8 +4,9 @@
  */
 
 import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { RoundResult } from '../../types/home';
 import { Colors } from '../../theme/colors';
 import { Spacing, BorderRadius } from '../../theme/spacing';
@@ -24,33 +25,55 @@ const ActivityCard: React.FC<{ round: RoundResult; onPress?: () => void }> = ({
     (Date.now() - round.date.getTime()) / (1000 * 60 * 60 * 24)
   );
 
-  const formattedDaysAgo = daysAgo === 0 ? 'Today' : `${daysAgo} Days Ago`;
-  const scoreColor = round.score < round.par ? Colors.success : Colors.error;
+  const formattedDaysAgo = daysAgo === 0 ? 'Today' : `${daysAgo}d ago`;
+  const isBetter = round.score < round.par;
+  const difference = Math.abs(round.score - round.par);
+  const differenceText = isBetter ? `-${difference}` : `+${difference}`;
+  
+  const accentColor = isBetter ? Colors.success : Colors.purple;
+  const bgColor = isBetter 
+    ? 'rgba(34, 197, 94, 0.08)' 
+    : 'rgba(99, 82, 255, 0.08)';
 
   return (
-    <View style={[styles.card, Shadows.md]}>
-      {/* Header with date */}
-      <Text style={styles.dateText}>{formattedDaysAgo}</Text>
+    <TouchableOpacity 
+      style={[styles.card, Shadows.md, { borderLeftColor: accentColor, borderLeftWidth: 3 }]} 
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      {/* Background accent */}
+      <View style={[styles.cardBackground, { backgroundColor: bgColor }]} />
 
-      {/* Course name */}
-      <Text style={styles.courseName}>{round.courseName}</Text>
-
-      {/* Score section */}
-      <View style={styles.scoreContainer}>
-        <Text style={styles.label}>Score</Text>
-        <View style={styles.scoreRow}>
-          <Text style={[styles.score, { color: scoreColor }]}>{round.score}</Text>
-          <View style={styles.divider} />
-          <View>
-            <Text style={styles.parLabel}>Par</Text>
-            <Text style={styles.parValue}>{round.par}</Text>
-          </View>
+      {/* Header: Date + Status Icon */}
+      <View style={styles.header}>
+        <Text style={styles.dateText}>{formattedDaysAgo}</Text>
+        <View style={[styles.statusBadge, { backgroundColor: accentColor }]}>
+          <Icon
+            name={isBetter ? 'trending-down' : 'trending-up'}
+            size={12}
+            color={Colors.white}
+          />
         </View>
       </View>
 
-      {/* Status indicator dot */}
-      <View style={[styles.dot, { backgroundColor: scoreColor }]} />
-    </View>
+      {/* Course name */}
+      <Text style={styles.courseName} numberOfLines={1}>{round.courseName}</Text>
+
+      {/* Score display - More prominent */}
+      <View style={styles.scoreSection}>
+        <View style={styles.mainScore}>
+          <Text style={[styles.score, { color: accentColor }]}>
+            {round.score}
+          </Text>
+        </View>
+        <View style={styles.scoreDetails}>
+          <Text style={[styles.difference, { color: accentColor }]}>
+            {differenceText}
+          </Text>
+          <Text style={styles.parText}>par {round.par}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 };
 
@@ -89,62 +112,71 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
-    minWidth: 130,
-    height: 140,
+    minWidth: 150,
+    height: 160,
     justifyContent: 'space-between',
+    overflow: 'hidden',
+  },
+  cardBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.5,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    zIndex: 1,
+    marginBottom: Spacing.sm,
   },
   dateText: {
     fontSize: 11,
     fontWeight: '600',
     color: Colors.gray,
   },
+  statusBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   courseName: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.black,
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.xs,
+    zIndex: 1,
+    marginBottom: Spacing.sm,
+    letterSpacing: -0.3,
   },
-  scoreContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: Colors.darkGray,
-    marginBottom: Spacing.xs,
-  },
-  scoreRow: {
+  scoreSection: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: Spacing.sm,
+    gap: Spacing.md,
+    zIndex: 1,
+  },
+  mainScore: {
+    justifyContent: 'flex-end',
   },
   score: {
-    fontSize: 24,
+    fontSize: 32,
+    fontWeight: '800',
+    letterSpacing: -1,
+  },
+  scoreDetails: {
+    gap: Spacing.xs,
+  },
+  difference: {
+    fontSize: 13,
     fontWeight: '700',
+    letterSpacing: -0.3,
   },
-  divider: {
-    width: 1,
-    height: 20,
-    backgroundColor: Colors.lightGray,
-    marginHorizontal: Spacing.xs,
-  },
-  parLabel: {
-    fontSize: 10,
+  parText: {
+    fontSize: 11,
     fontWeight: '500',
     color: Colors.gray,
-  },
-  parValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.black,
-    marginTop: Spacing.xs,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: BorderRadius.full,
-    alignSelf: 'flex-end',
   },
 });

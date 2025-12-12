@@ -7,6 +7,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { TrainingDrill } from '../../types/home';
 import { Colors } from '../../theme/colors';
 import { Spacing, BorderRadius } from '../../theme/spacing';
@@ -25,26 +26,30 @@ const DrillCard: React.FC<{ drill: TrainingDrill; onPress?: () => void }> = ({
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'driving':
-        return '🏌️';
+        return 'golf';
       case 'chipping':
-        return '🎯';
+        return 'target-outline';
       case 'putting':
-        return '⚫';
+        return 'circle-outline';
       case 'full-swing':
-        return '⚡';
+        return 'lightning-bolt';
       default:
-        return '🏋️';
+        return 'dumbbell';
     }
   };
 
   return (
-    <TouchableOpacity style={[styles.drillCard, Shadows.md]} onPress={onPress}>
+    <TouchableOpacity style={[styles.drillCard, Shadows.md]} onPress={onPress} activeOpacity={0.8}>
       {/* Background gradient indicator */}
       <View style={styles.drillBackground} />
 
       {/* Icon container */}
       <View style={styles.iconContainer}>
-        <Text style={styles.typeIcon}>{getTypeIcon(drill.type)}</Text>
+        <Icon 
+          name={getTypeIcon(drill.type)} 
+          size={24} 
+          color={Colors.white} 
+        />
       </View>
 
       {/* Content */}
@@ -55,7 +60,11 @@ const DrillCard: React.FC<{ drill: TrainingDrill; onPress?: () => void }> = ({
 
       {/* Play button */}
       <View style={styles.playButton}>
-        <Text style={styles.playIcon}>▶️</Text>
+        <Icon 
+          name="play" 
+          size={20} 
+          color={Colors.white} 
+        />
       </View>
     </TouchableOpacity>
   );
@@ -64,7 +73,13 @@ const DrillCard: React.FC<{ drill: TrainingDrill; onPress?: () => void }> = ({
 const EmptyState: React.FC<{ onGetStarted?: () => void }> = ({ onGetStarted }) => {
   return (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>🏋️</Text>
+      <View style={styles.emptyIconContainer}>
+        <Icon 
+          name="dumbbell" 
+          size={48} 
+          color={Colors.purple} 
+        />
+      </View>
       <Text style={styles.emptyTitle}>Get Started</Text>
       <Text style={styles.emptySubtitle}>Create your first training drill</Text>
       <TouchableOpacity style={styles.emptyButton} onPress={onGetStarted}>
@@ -159,9 +174,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 1,
   },
-  typeIcon: {
-    fontSize: 24,
-  },
   drillContent: {
     flex: 1,
     marginLeft: Spacing.md,
@@ -186,10 +198,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 1,
   },
-  playIcon: {
-    fontSize: 18,
-    color: Colors.white,
-  },
   // Empty state
   emptyContainer: {
     backgroundColor: Colors.pale,
@@ -199,14 +207,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 200,
   },
-  emptyIcon: {
-    fontSize: 48,
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(99, 82, 255, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
   },
   emptyTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: Colors.black,
-    marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
   emptySubtitle: {
