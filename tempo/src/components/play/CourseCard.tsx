@@ -6,6 +6,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { CourseCard as CourseCardType } from '../../types/home';
 import { Colors } from '../../theme/colors';
 import { Spacing, BorderRadius } from '../../theme/spacing';
@@ -18,7 +19,8 @@ interface CourseCardProps {
 
 export const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
   return (
-    <TouchableOpacity style={[styles.container, Shadows.md]} onPress={onPress}>
+    <View style={Shadows.lg}>
+      <TouchableOpacity style={[styles.container]} onPress={onPress} activeOpacity={0.8}>
       {/* Background gradient (placeholder for course image) */}
       <View style={styles.imageContainer}>
         {/* Badges at top right */}
@@ -43,20 +45,24 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
           </View>
           
           {/* Play button positioned to the right */}
-          <View style={styles.playButton}>
-            <Text style={styles.playIcon}>▶</Text>
-          </View>
+          <TouchableOpacity 
+            style={styles.playButton}
+            onPress={onPress}
+            activeOpacity={0.8}
+          >
+            <Icon name="play" size={24} color={Colors.white} />
+          </TouchableOpacity>
         </View>
       </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: Spacing.lg,
     marginBottom: Spacing.lg,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     overflow: 'hidden',
   },
   imageContainer: {
@@ -65,6 +71,8 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     justifyContent: 'flex-start',
     alignItems: 'flex-end',
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
   },
   badgeContainer: {
     flexDirection: 'row',
@@ -75,9 +83,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.md,
+    minWidth: 45,
+    alignItems: 'center',
   },
   badgeValue: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.white,
     fontWeight: '700',
   },
@@ -85,6 +95,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
+    borderBottomLeftRadius: BorderRadius.xl,
+    borderBottomRightRadius: BorderRadius.xl,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 4,
   },
   courseNameRow: {
     flexDirection: 'row',
@@ -96,29 +113,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   courseName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     color: Colors.black,
     marginBottom: Spacing.xs,
-    textTransform: 'capitalize',
   },
   courseDetails: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.darkGray,
     fontWeight: '500',
   },
   playButton: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     borderRadius: BorderRadius.full,
     backgroundColor: Colors.purple,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
     flexShrink: 0,
   },
   playIcon: {
