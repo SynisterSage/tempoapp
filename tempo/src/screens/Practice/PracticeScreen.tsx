@@ -3,21 +3,23 @@
  * Practice session tracking and drill recommendations
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
+  TextInput,
   TouchableOpacity,
   FlatList,
   Dimensions,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MainTabScreenProps } from '../../navigation/types';
 import { Header } from '../../components/common/Header';
 import { Colors } from '../../theme/colors';
-import { Spacing } from '../../theme/spacing';
+import { Spacing, Layout } from '../../theme/spacing';
 import {
   mockCoachInsight,
   mockTrainingTools,
@@ -31,6 +33,57 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export const PracticeScreen = ({ navigation }: Props) => {
   const [selectedDrill, setSelectedDrill] = useState<string | null>(null);
+  const [chatInput, setChatInput] = useState<string>('');
+  const [chatMessages, setChatMessages] = useState<Array<{id: string; role: 'user'|'assistant'; text: string; recommendation?: string}>>([]);
+  const [typedHint, setTypedHint] = useState<string>('');
+  const [cursorVisible, setCursorVisible] = useState<boolean>(true);
+  const HINT_TEXT = 'AI Coach ready — ask about your swing...';
+
+  // Typewriter effect for initial hint. Stops when user starts typing or receives assistant message.
+  const timeoutsRef = useRef<number[]>([]);
+  const blinkRef = useRef<number | null>(null);
+  useEffect(() => {
+    // clear any existing timeouts/intervals
+    timeoutsRef.current.forEach((id) => clearTimeout(id));
+    timeoutsRef.current = [];
+    if (blinkRef.current) {
+      clearInterval(blinkRef.current);
+      blinkRef.current = null;
+    }
+
+    // don't run if user has typed or assistant responded
+    if (chatMessages.length > 0 || chatInput.trim().length > 0) {
+      setTypedHint(HINT_TEXT);
+      setCursorVisible(false);
+      return;
+    }
+
+    setTypedHint('');
+    // schedule timeouts for each character to avoid interval race conditions
+    for (let i = 0; i < HINT_TEXT.length; i += 1) {
+      const t = setTimeout(() => {
+        setTypedHint((prev) => prev + HINT_TEXT[i]);
+      }, i * 26) as unknown as number;
+      timeoutsRef.current.push(t);
+    }
+
+    // blinking cursor
+    blinkRef.current = setInterval(() => {
+      setCursorVisible((v) => !v);
+    }, 500) as unknown as number;
+
+    return () => {
+      timeoutsRef.current.forEach((id) => clearTimeout(id));
+      timeoutsRef.current = [];
+      if (blinkRef.current) {
+        clearInterval(blinkRef.current);
+        blinkRef.current = null;
+      }
+    };
+  }, [chatMessages.length, chatInput]);
+
+  const assistantRecommendationId = chatMessages.find((m) => m.role === 'assistant' && m.recommendation)?.recommendation ?? null;
+  const lastAssistantMessage = [...chatMessages].reverse().find((m) => m.role === 'assistant') ?? null;
 
   const handleSettingsPress = () => {
     navigation.navigate('SettingsTab');
@@ -63,61 +116,105 @@ export const PracticeScreen = ({ navigation }: Props) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
-        {/* Section Title: AI-Driven Improvement */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>AI-Driven Improvement by Tempo</Text>
-        </View>
+        {/* Hero: AI Coach Insight Card (header removed - card only) */}
+        <View style={styles.coachInsightWrapper}>
+          <View style={styles.coachInsightCardNew}>
+            {/* decorative watermark circle */}
+            <View style={styles.watermarkCircle} pointerEvents="none" />
 
-        {/* AI Coach Insight Card */}
-        <TouchableOpacity
-          style={styles.coachInsightCard}
-          onPress={() => console.log('Coach insight pressed')}
-          activeOpacity={0.9}
-        >
-          <View style={styles.coachInsightHeader}>
-            <Text style={styles.coachLabel}>📈 AI Coach Insight</Text>
-          </View>
-
-          <Text style={styles.coachInsightText}>
-            <Text>"Hi Chris, I analyzed your round at Torrey Pines. You're </Text>
-            <Text style={styles.highlightedText}>losing</Text>
-            <Text> strokes off the tee due to a </Text>
-            <Text style={styles.highlightedText}>slice miss pattern</Text>
-            <Text> (avg 15y Right)."</Text>
-          </Text>
-
-          {/* Tempo Rhythm Check Tool */}
-          <TouchableOpacity
-            style={styles.rhythmCheckCard}
-            onPress={() => handleToolPress('tool-001')}
-            activeOpacity={0.85}
-          >
-            <View style={styles.rhythmCheckContent}>
-              <Text style={styles.rhythmCheckIcon}>⊙</Text>
-              <View style={styles.rhythmCheckText}>
-                <Text style={styles.rhythmCheckTitle}>Tempo Rhythm Check</Text>
-                <Text style={styles.rhythmCheckSubtitle}>Driving • 10 min</Text>
+            <View style={styles.coachInsightHeaderRow}>
+              <View style={styles.coachLabelRow}>
+                <Icon name="trending-up" size={18} color={Colors.purple} style={{marginRight:8}} />
+                <Text style={styles.coachLabel}>{mockCoachInsight.title}</Text>
               </View>
             </View>
-            <TouchableOpacity
-              style={styles.playButton}
-              onPress={() => handleToolPress('tool-001')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.playButtonText}>▶</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
 
-          {/* Ask About Swing Button */}
-          <TouchableOpacity
-            style={styles.askButton}
-            onPress={() => console.log('Ask about swing')}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.askButtonText}>Ask about your swing...</Text>
-            <Text style={styles.askButtonIcon}>💬</Text>
-          </TouchableOpacity>
-        </TouchableOpacity>
+            {/* message area - show last assistant response (do not flash user's message) otherwise show hint */}
+            <View style={styles.messageArea}>
+              {lastAssistantMessage ? (
+                <View style={styles.messageRow}>
+                  <Icon name="star" size={16} color={Colors.purple} style={{marginRight:8, marginTop:2}} />
+                  <Text style={styles.coachInsightText}>{lastAssistantMessage.text}</Text>
+                </View>
+              ) : (
+                <View style={styles.hintRow}>
+                  <Icon name="star" size={14} color={Colors.purple} style={{marginRight:8}} />
+                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                    <Text style={styles.hintText}>{typedHint}</Text>
+                    <Text style={[styles.cursor, {opacity: cursorVisible ? 1 : 0}]}>|</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+
+            {/* Tempo Rhythm Check Tool - shown only when assistant provided a recommendation */}
+            {assistantRecommendationId ? (
+              <TouchableOpacity
+                style={[styles.rhythmCheckCard, styles.rhythmCheckCardElevated]}
+                onPress={() => handleToolPress('tool-001')}
+                activeOpacity={0.85}
+              >
+                <View style={styles.rhythmCheckContent}>
+                  <Icon name="golf" size={26} color="#6366F1" style={{marginRight:12}} />
+                  <View style={styles.rhythmCheckText}>
+                    <Text style={styles.rhythmCheckTitle}>{mockNextRecommendedDrill.name}</Text>
+                    <Text style={styles.rhythmCheckSubtitle}>{mockNextRecommendedDrill.description}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.playButton, styles.playButtonAlign]}
+                  onPress={() => handleToolPress('tool-001')}
+                  activeOpacity={0.7}
+                >
+                  <Icon name="play" size={16} color="#FFFFFF" />
+                </TouchableOpacity>
+              </TouchableOpacity>
+            ) : null}
+
+            {/* Chat input - interactive, ready for LLM integration */}
+            <View style={styles.chatInputRow}>
+              <TextInput
+                value={chatInput}
+                onChangeText={setChatInput}
+                placeholder="Ask about your swing..."
+                placeholderTextColor="#9CA3AF"
+                style={styles.chatInput}
+                returnKeyType="send"
+                onSubmitEditing={() => {
+                  if (!chatInput.trim()) return;
+                  const userMsg = { id: `u-${Date.now()}`, role: 'user' as const, text: chatInput };
+                  setChatMessages((s) => [...s, userMsg]);
+                  setChatInput('');
+                  // simulate LLM response (mocked plan + recommendation id)
+                  setTimeout(() => {
+                    const assistantText = `I recommend working on swing tempo and path. Try short sets focusing on a smoother transition and a controlled release.`;
+                    const assistantMsg = { id: `a-${Date.now()}`, role: 'assistant' as const, text: assistantText, recommendation: mockNextRecommendedDrill.id };
+                    setChatMessages((s) => [...s, assistantMsg]);
+                  }, 750);
+                }}
+              />
+
+              <TouchableOpacity
+                style={styles.chatSend}
+                onPress={() => {
+                  if (!chatInput.trim()) return;
+                  const userMsg = { id: `u-${Date.now()}`, role: 'user' as const, text: chatInput };
+                  setChatMessages((s) => [...s, userMsg]);
+                  setChatInput('');
+                  setTimeout(() => {
+                    const assistantText = `I recommend working on swing tempo and path. Try short sets focusing on a smoother transition and a controlled release.`;
+                    const assistantMsg = { id: `a-${Date.now()}`, role: 'assistant' as const, text: assistantText, recommendation: mockNextRecommendedDrill.id };
+                    setChatMessages((s) => [...s, assistantMsg]);
+                  }, 750);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.chatSendText}>↩︎</Text>
+              </TouchableOpacity>
+            </View>
+
+          </View>
+        </View>
 
         {/* Training Tools Section */}
         <View style={styles.trainingToolsSection}>
@@ -232,6 +329,47 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#E9D5FF',
   },
+  coachInsightWrapper: {
+    marginTop: 24,
+    marginBottom: 8,
+  },
+  coachInsightCardNew: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#EDE9FE',
+    overflow: 'hidden',
+    // stronger yet not-too-low drop shadow for card (reduced vertical offset)
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 16,
+  },
+  watermarkCircle: {
+    position: 'absolute',
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: '#EDE9FE',
+    right: -40,
+    top: -40,
+    opacity: 0.65,
+  },
+  coachInsightHeaderRow: {
+    marginBottom: 8,
+    zIndex: 2,
+  },
+  coachLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  messageArea: {
+    marginBottom: 12,
+    zIndex: 2,
+  },
   coachInsightHeader: {
     marginBottom: 12,
   },
@@ -261,6 +399,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    // subtle shadow
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  rhythmCheckCardElevated: {
+    // reduced elevated shadow to be less heavy
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 12,
+    elevation: 6,
   },
   rhythmCheckContent: {
     flexDirection: 'row',
@@ -315,6 +467,70 @@ const styles = StyleSheet.create({
   },
   askButtonIcon: {
     fontSize: 16,
+  },
+
+  // Chat / Input
+  chatInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    zIndex: 2,
+  },
+  chatInput: {
+    flex: 1,
+    height: Layout.inputHeightSmall,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#111827',
+    marginRight: 8,
+  },
+  chatSend: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#6366F1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chatSendText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+  },
+  playButtonAlign: {
+    alignSelf: 'center',
+  },
+  hintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  hintIcon: {
+    fontSize: 14,
+    color: '#A78BFA',
+    marginRight: 8,
+  },
+  hintText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+  },
+  
+  messageRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  messageIcon: {
+    fontSize: 16,
+    color: '#F59E0B',
+    marginRight: 8,
+    marginTop: 2,
+  },
+  cursor: {
+    fontSize: 14,
+    color: Colors.purple,
+    marginLeft: 4,
+    height: 18,
   },
 
   // Training Tools Section
