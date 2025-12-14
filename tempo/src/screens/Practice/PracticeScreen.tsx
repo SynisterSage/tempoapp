@@ -26,6 +26,7 @@ import {
   mockNextRecommendedDrill,
 } from '../../data/mockPracticeData';
 import TrainingTools from '../../components/practice/TrainingTools';
+import DrillCard from '../../components/practice/DrillCard';
 
 type Props = MainTabScreenProps<'PracticeTab'>;
 
@@ -233,25 +234,13 @@ export const PracticeScreen = ({ navigation }: Props) => {
             keyExtractor={(item) => item.id}
             scrollEnabled={false}
             renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[
-                  styles.drillCard,
-                  selectedDrill === item.id && styles.drillCardActive,
-                ]}
+              <DrillCard
+                drill={item}
                 onPress={() => handleDrillPress(item.id)}
-                activeOpacity={0.85}
-              >
-                <View style={styles.drillCardContent}>
-                  <Text style={styles.drillName}>{item.name}</Text>
-                  <Text style={styles.drillDescription}>{item.description}</Text>
-                  <View style={styles.drillMeta}>
-                    <Text style={styles.drillCategory}>{item.category}</Text>
-                    <Text style={styles.drillTime}>⏱ {item.estimatedTime} min</Text>
-                  </View>
-                </View>
-                <Text style={styles.drillArrow}>→</Text>
-              </TouchableOpacity>
+              />
             )}
+            ItemSeparatorComponent={() => <View style={{height: Spacing.md}} />}
+            contentContainerStyle={{ paddingBottom: Spacing.md }}
           />
         </View>
 
