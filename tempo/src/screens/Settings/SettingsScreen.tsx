@@ -13,7 +13,7 @@ import { Header } from '../../components/common/Header';
 import { Colors } from '../../theme/colors';
 import { Spacing, BorderRadius } from '../../theme/spacing';
 import { Shadows } from '../../theme/shadows';
-import { auth } from '../../services/auth';
+import { auth, profile as profileService } from '../../services/auth';
 
 type Props = MainTabScreenProps<'SettingsTab'>;
 
@@ -30,6 +30,70 @@ export const SettingsScreen = ({ navigation }: Props) => {
   const [handedness, setHandedness] = useState<'L' | 'R'>('L');
   const [haptics, setHaptics] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isSavingPref, setIsSavingPref] = useState(false);
+
+  // Load persisted preferences from Supabase profiles on mount
+  React.useEffect(() => {
+    let mounted = true;
+    const loadProfile = async () => {
+      try {
+        const { data: userData } = await auth.getUser();
+        const user = userData?.user;
+        if (!user) return;
+
+        const { data, error } = await profileService.getProfile(user.id);
+        if (error) {
+          // No profile yet or other error
+          console.log('No profile found or error loading profile', error);
+          return;
+        }
+
+        if (!mounted) return;
+        if (data) {
+          setHandedness(data.handedness === 'left' ? 'L' : 'R');
+          setDistanceUnit(data.unit_preference === 'metric' ? 'M' : 'Y');
+        }
+      } catch (err) {
+        console.error('Error loading profile preferences', err);
+      }
+    };
+
+    loadProfile();
+    return () => { mounted = false; };
+  }, []);
+
+  // Save preference helper - will attempt update, fallback to insert
+  const savePreferences = async (updates: { handedness?: string; unit_preference?: string }) => {
+    try {
+      setIsSavingPref(true);
+      const { data: userData } = await auth.getUser();
+      const user = userData?.user;
+      if (!user) return;
+
+      // Try update first
+      const { data: updateData, error: updateErr } = await profileService.updateProfile(user.id, updates as any);
+      if (updateErr) {
+        console.error('Error updating profile:', updateErr);
+      }
+
+      // If update returned no rows, try create
+      if (!updateData || (Array.isArray(updateData) && updateData.length === 0)) {
+        const { data: createData, error: createErr } = await profileService.createProfile(user.id, {
+          handedness: updates.handedness as any,
+          unit_preference: updates.unit_preference as any,
+        });
+        if (createErr) {
+          console.error('Error creating profile:', createErr);
+        } else {
+          console.log('Profile created with preferences', createData);
+        }
+      }
+    } catch (err) {
+      console.error('savePreferences exception', err);
+    } finally {
+      setIsSavingPref(false);
+    }
+  };
 
   const handleBackPress = () => {
     navigation.navigate('HomeTab');
@@ -147,9 +211,9 @@ export const SettingsScreen = ({ navigation }: Props) => {
           </View>
         </View>
 
-        {/* My Bag Settings Section */}
+        {/* Preferences Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>My Bag</Text>
+          <Text style={styles.sectionTitle}>Preferences</Text>
           
           {/* Settings Card */}
           <View style={[styles.settingsCard, Shadows.sm]}>
@@ -162,7 +226,10 @@ export const SettingsScreen = ({ navigation }: Props) => {
                     styles.toggleButton,
                     distanceUnit === 'Y' && styles.toggleButtonActive,
                   ]}
-                  onPress={() => setDistanceUnit('Y')}
+                  onPress={() => {
+                    setDistanceUnit('Y');
+                    savePreferences({ unit_preference: 'imperial' });
+                  }}
                 >
                   <Text
                     style={[
@@ -178,7 +245,10 @@ export const SettingsScreen = ({ navigation }: Props) => {
                     styles.toggleButton,
                     distanceUnit === 'M' && styles.toggleButtonActive,
                   ]}
-                  onPress={() => setDistanceUnit('M')}
+                  onPress={() => {
+                    setDistanceUnit('M');
+                    savePreferences({ unit_preference: 'metric' });
+                  }}
                 >
                   <Text
                     style={[
@@ -203,7 +273,10 @@ export const SettingsScreen = ({ navigation }: Props) => {
                     styles.toggleButton,
                     handedness === 'L' && styles.toggleButtonActive,
                   ]}
-                  onPress={() => setHandedness('L')}
+                  onPress={() => {
+                    setHandedness('L');
+                    savePreferences({ handedness: 'left' });
+                  }}
                 >
                   <Text
                     style={[
@@ -219,7 +292,10 @@ export const SettingsScreen = ({ navigation }: Props) => {
                     styles.toggleButton,
                     handedness === 'R' && styles.toggleButtonActive,
                   ]}
-                  onPress={() => setHandedness('R')}
+                  onPress={() => {
+                    setHandedness('R');
+                    savePreferences({ handedness: 'right' });
+                  }}
                 >
                   <Text
                     style={[
@@ -303,10 +379,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.xl,
-    backgroundColor: Colors.pale,
+    backgroundColor: Colors.white,
   },
   profileCard: {
     backgroundColor: Colors.purple,
@@ -342,11 +417,11 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
   },
   section: {
-    marginHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.xl,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: '700',
     color: Colors.black,
     marginBottom: Spacing.md,
@@ -442,8 +517,8 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 16,
-    fontWeight: '600',
-    color: Colors.black,
+    fontWeight: '500',
+    color: Colors.darkGray,
   },
   toggleGroup: {
     flexDirection: 'row',
@@ -484,8 +559,8 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: Colors.black,
+    fontWeight: '500',
+    color: Colors.darkGray,
   },
   logoutButton: {
     paddingVertical: Spacing.md,

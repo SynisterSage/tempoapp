@@ -136,10 +136,10 @@ export const auth = {
           } else {
             console.log('✅ Session set on Supabase client from signup response');
           }
-        } else {
+          } else {
           // If no session in response, try to get it via getSession
           console.log('📝 No session in signup response, attempting to get session...');
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(() => resolve(undefined), 500));
           const { data: { session }, error: getSessionError } = await supabase.auth.getSession();
           if (getSessionError) {
             console.error('❌ Error getting session:', getSessionError.message);

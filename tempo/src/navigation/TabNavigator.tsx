@@ -34,7 +34,9 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
   useEffect(() => {
     let translateX = 0;
-    
+    // Determine if Settings (hidden) tab is active
+    const isSettingsActive = state.routes[state.index]?.name === 'SettingsTab';
+
     // Calculate position based on active tab
     if (state.index === 0) {
       translateX = 8; // Left padding
@@ -48,6 +50,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
       translateX = rightSideStartX + 8 + tabWidth;
     }
 
+    // If Settings is active we don't want the accent bar visible — leave position but hide via opacity
     Animated.spring(animatedPosition, {
       toValue: translateX,
       useNativeDriver: false,
@@ -98,6 +101,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           styles.accentBar,
           {
             transform: [{ translateX: animatedPosition }],
+            opacity: state.routes[state.index]?.name === 'SettingsTab' ? 0 : 1,
           },
         ]}
       />
