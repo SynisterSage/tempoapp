@@ -22,10 +22,10 @@ import { Colors } from '../../theme/colors';
 import { Spacing, Layout } from '../../theme/spacing';
 import {
   mockCoachInsight,
-  mockTrainingTools,
   mockActiveDrills,
   mockNextRecommendedDrill,
 } from '../../data/mockPracticeData';
+import TrainingTools from '../../components/practice/TrainingTools';
 
 type Props = MainTabScreenProps<'PracticeTab'>;
 
@@ -216,30 +216,8 @@ export const PracticeScreen = ({ navigation }: Props) => {
           </View>
         </View>
 
-        {/* Training Tools Section */}
-        <View style={styles.trainingToolsSection}>
-          <View style={styles.sectionTitleRow}>
-            <Text style={styles.sectionTitle}>Training Tools</Text>
-            <TouchableOpacity onPress={() => console.log('All Tools')}>
-              <Text style={styles.allLink}>All Tools</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.toolsGrid}>
-            {mockTrainingTools.slice(1).map((tool) => (
-              <TouchableOpacity
-                key={tool.id}
-                style={styles.toolCard}
-                onPress={() => handleToolPress(tool.id)}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.toolIcon}>{tool.icon}</Text>
-                <Text style={styles.toolName}>{tool.name}</Text>
-                <Text style={styles.toolDescription}>{tool.description}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+        {/* Training Tools Section (new component) */}
+        <TrainingTools />
 
         {/* Training Lab Section */}
         <View style={styles.trainingLabSection}>
