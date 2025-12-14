@@ -125,14 +125,7 @@ export const StatsScreen = ({ navigation }: Props) => {
         notificationBadge={0}
       />
 
-      {/* Debug Info - Show data source */}
-      {__DEV__ && (
-        <View style={styles.debugBanner}>
-          <Text style={styles.debugText}>
-            📊 Using {STATS_CONFIG.USE_MOCK_DATA ? 'MOCK' : 'API'} data
-          </Text>
-        </View>
-      )}
+      {/* Debug Info removed per UX — no DEV banner displayed */}
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -145,21 +138,18 @@ export const StatsScreen = ({ navigation }: Props) => {
             label="Index"
             value={stats.userStats.currentHandicap}
             subtitle="HCP"
-            tags={[`HCP`]}
             onPress={() => {}}
           />
           <StatsIndexCard
             label="AVG Score"
             value={Math.round(stats.userStats.averageScore * 10) / 10}
             subtitle="Last 5"
-            tags={[`↘ 0.2`]}
             onPress={() => {}}
           />
           <StatsIndexCard
             label="BEST Rnd"
             value={stats.userStats.lowestScore}
             subtitle="Recent"
-            tags={[`2 wk`]}
             onPress={() => {}}
           />
         </View>
