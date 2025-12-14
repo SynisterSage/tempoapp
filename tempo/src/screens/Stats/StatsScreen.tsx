@@ -20,7 +20,7 @@ import {
   ScoringCorrelationDataPoint,
   STATS_CONFIG,
 } from '../../data/mockStatsData';
-import { RecentActivityStats } from '../../components/stats/RecentActivityStats';
+import StatsIndexCard from '../../components/stats/StatsIndexCard';
 import { ScoringCorrelations } from '../../components/stats/ScoringCorrelations';
 import { StatsBreakdown } from '../../components/stats/StatsBreakdown';
 
@@ -139,8 +139,30 @@ export const StatsScreen = ({ navigation }: Props) => {
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
       >
-        {/* Recent Activity Stats Cards */}
-        <RecentActivityStats stats={stats.userStats} />
+        {/* Recent Activity Stats Cards (hero row) */}
+        <View style={styles.heroRow}>
+          <StatsIndexCard
+            label="Index"
+            value={stats.userStats.currentHandicap}
+            subtitle="HCP"
+            tags={[`HCP`]}
+            onPress={() => {}}
+          />
+          <StatsIndexCard
+            label="AVG Score"
+            value={Math.round(stats.userStats.averageScore * 10) / 10}
+            subtitle="Last 5"
+            tags={[`↘ 0.2`]}
+            onPress={() => {}}
+          />
+          <StatsIndexCard
+            label="BEST Rnd"
+            value={stats.userStats.lowestScore}
+            subtitle="Recent"
+            tags={[`2 wk`]}
+            onPress={() => {}}
+          />
+        </View>
 
         {/* Scoring Correlations Chart */}
         <ScoringCorrelations data={stats.scoringCorrelations} />
@@ -202,5 +224,12 @@ const styles = StyleSheet.create({
   },
   footerSpacer: {
     height: Spacing.xl,
+  },
+  heroRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.md,
+    marginHorizontal: -Spacing.xs,
   },
 });
